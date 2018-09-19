@@ -1,6 +1,7 @@
 let linkSize = 10;
 let topCirclePos, rightCirclePos, topCircleLink, rightCircleLink;
-let speedSlider, offsetSlider, speedRatioSlider, lineDecaySlider, lineALengthSlider, lineBLengthSlider, circleARadiusSlider, circleBRadiusSlider;
+let speedSlider, offsetSlider, speedRatioSlider, lineDecaySlider, penSlipSlider;
+let lineALengthSlider, lineBLengthSlider, circleARadiusSlider, circleBRadiusSlider;
 let missajousCurve = new curve();
 
 function setup() {
@@ -15,6 +16,8 @@ function setup() {
   speedRatioSlider = createSlider(0, 10, 2, 0);
   createP("Rotation Offset");
   offsetSlider = createSlider(0, 360, 90, 0);
+  createP("Pen Slip");
+  penSlipSlider = createSlider(0, 15, 0);
   
   //TODO actually connect these
   createP("Line Decay");
@@ -37,6 +40,7 @@ function setup() {
 }
 
 let time = 0;
+let penTip = null;
 
 function draw() {
   // put drawing code here
@@ -52,17 +56,27 @@ function draw() {
   ellipse(topCircleLink.x, topCircleLink.y, linkSize);
   ellipse(rightCircleLink.x, rightCircleLink.y, linkSize);
 
-  thirdPoint = findThirdPoint(topCircleLink, rightCircleLink, lineBLengthSlider.value(), lineALengthSlider.value());
+  let penHold = findThirdPoint(topCircleLink, rightCircleLink, lineBLengthSlider.value(), lineALengthSlider.value());
 
-  missajousCurve.plot(thirdPoint);
+  if(penTip) {
+    if(penTip.dist(penHold) > penSlipSlider.value()) {
+      penTip = penTip.sub(penHold).normalize().mult(penSlipSlider.value()).add(penHold);
+    }
+  }
+  else {
+    penTip = penHold;
+  }
+
+  missajousCurve.plot(penTip);
   missajousCurve.draw();
   missajousCurve.setDecay(lineDecaySlider.value());
 
-  ellipse(thirdPoint.x, thirdPoint.y, linkSize);
+  ellipse(penHold.x, penHold.y, linkSize / 2);
+  ellipse(penTip.x, penTip.y, linkSize / 2);
 
   stroke(255, 165, 0);
-  line(topCircleLink.x, topCircleLink.y, thirdPoint.x, thirdPoint.y);
-  line(rightCircleLink.x, rightCircleLink.y, thirdPoint.x, thirdPoint.y);
+  line(topCircleLink.x, topCircleLink.y, penHold.x, penHold.y);
+  line(rightCircleLink.x, rightCircleLink.y, penHold.x, penHold.y);
 
   time += speedSlider.value() / 512;
 }

@@ -2,7 +2,7 @@ function curve(decay = 150) {
     this.decay = decay;
     this.points = [];
     this.plot = function (point) {
-        this.points.push(point);
+        this.points.push(point.copy()); //copy incase vector is changed else-where
         while (this.points.length > this.decay) {
             this.points.shift();
         }
