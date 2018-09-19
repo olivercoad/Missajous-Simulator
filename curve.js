@@ -1,42 +1,33 @@
 function curve(decay = 150) {
+    this.decay = decay;
     this.points = [];
-    this.plot = function(point) {
+    this.plot = function (point) {
         this.points.push(point);
-        if(this.points.length > decay) {
+        while (this.points.length > this.decay) {
             this.points.shift();
         }
     }
-    this.setDecay
-    this.draw = function() {
-//Apha bsed on index]
-        let weight = 5;
-        stroke(255);
-        strokeCap(SQUARE);
-        strokeWeight(weight);
-        noFill();
-        let falloff = floor(decay * 0.5);
-        let lastPoint = null;
-        this.points.forEach(function(e, i) {
-            
-            stroke(0, 200, 0, i/(falloff/255));
-            if(i > falloff) {
-                vertex(e.x, e.y);
-            }
-            else {
-                if(i == falloff) {
-                    beginShape();
-                    vertex(e.x, e.y);
-                }
-                if(lastPoint) {
 
-                    line(lastPoint.x, lastPoint.y, e.x, e.y);
-                }
-            }
-            lastPoint = e;
-        }, this);
-
-        endShape(); //if not many points
-
-        
+    this.setDecay = function (decay) {
+        this.decay = decay;
     }
+
+    this.draw = function () {
+        //stroke(255);
+        //noFill();
+        
+        let lastPoint = null;
+        for(let i = 0; i < this.points.length; i++) {
+            let e = this.points[i];
+            if (lastPoint) {
+                stroke(255, 0, 255, 255);
+                let alpha = floor((i / this.decay) * 255);
+                stroke(0, 0, 255, alpha);
+                line(lastPoint.x, lastPoint.y, e.x, e.y);
+            }
+
+            lastPoint = e;
+        }
+
+   }
 }

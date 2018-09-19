@@ -1,25 +1,39 @@
-let circleRadius = 30;
 let linkSize = 10;
 let topCirclePos, rightCirclePos, topCircleLink, rightCircleLink;
-let topLinkLength = 200, rightLinkLength = 200;
-let speedSlider, offsetSlider, speedRatioSlider;
+let speedSlider, offsetSlider, speedRatioSlider, lineDecaySlider, lineALengthSlider, lineBLengthSlider, circleARadiusSlider, circleBRadiusSlider;
 let missajousCurve = new curve();
 
 function setup() {
   // put setup code here
-  createCanvas(400, 400);
+  createCanvas(600, 600);
   background(57);
-  topCirclePos = createVector(width / 2, circleRadius * 2);
-  rightCirclePos = createVector(width - circleRadius * 2, height / 2);
-  topCircleLink = createVector();
-  rightCircleLink = createVector();
+  //TODO Wrap this in a menu
+  //TODO CSS
   createP("Speed");
   speedSlider = createSlider(0, 255, 20, 0);
   createP("Speed Ratio");
   speedRatioSlider = createSlider(0, 10, 2, 0);
   createP("Rotation Offset");
   offsetSlider = createSlider(0, 360, 90, 0);
-  //frameRate(2);
+  
+  //TODO actually connect these
+  createP("Line Decay");
+  lineDecaySlider = createSlider(0, 1000, 150, 1);
+  createP("Line A length");
+  lineALengthSlider = createSlider(0, 500, 250, 0);
+  createP("Line B length");
+  lineBLengthSlider = createSlider(0, 500, 250, 0);
+  
+  createP("Circle A Radius");
+  circleARadiusSlider = createSlider(0, 150, 50, 0);
+  createP("Circle B Radius");
+  circleBRadiusSlider = createSlider(0, 150, 50, 0);
+
+
+  topCirclePos = createVector(width / 2, circleARadiusSlider.value() * 1.5);
+  rightCirclePos = createVector(width - circleBRadiusSlider.value() * 1.5, height / 2);
+  topCircleLink = createVector();
+  rightCircleLink = createVector();
 }
 
 let time = 0;
@@ -29,19 +43,21 @@ function draw() {
   background(57);
   fill(255, 10);
   stroke(230, 0, 100);
-  ellipse(topCirclePos.x, topCirclePos.y, circleRadius * 2);
-  ellipse(rightCirclePos.x, rightCirclePos.y, circleRadius * 2);
-  
+  ellipse(topCirclePos.x, topCirclePos.y, circleARadiusSlider.value() * 2);
+  ellipse(rightCirclePos.x, rightCirclePos.y, circleBRadiusSlider.value() * 2);
+
   updateCircleLinks(time, offsetSlider.value() * Math.PI / 180, speedRatioSlider.value());
 
   fill(20, 220, 190);
   ellipse(topCircleLink.x, topCircleLink.y, linkSize);
   ellipse(rightCircleLink.x, rightCircleLink.y, linkSize);
 
-  thirdPoint = findThirdPoint(topCircleLink, rightCircleLink, rightLinkLength, topLinkLength);
-  
+  thirdPoint = findThirdPoint(topCircleLink, rightCircleLink, lineBLengthSlider.value(), lineALengthSlider.value());
+
   missajousCurve.plot(thirdPoint);
   missajousCurve.draw();
+  missajousCurve.setDecay(lineDecaySlider.value());
+
   ellipse(thirdPoint.x, thirdPoint.y, linkSize);
 
   stroke(255, 165, 0);
@@ -52,11 +68,11 @@ function draw() {
 }
 
 function updateCircleLinks(rotation, offset, ratio) {
-  topCircleLink.set(topCirclePos.x + circleRadius * Math.cos(rotation),
-    topCirclePos.y + circleRadius * Math.sin(rotation));
+  topCircleLink.set(topCirclePos.x + circleARadiusSlider.value() * Math.cos(rotation),
+    topCirclePos.y + circleARadiusSlider.value() * Math.sin(rotation));
   rotation = rotation + offset;
-  rightCircleLink.set(rightCirclePos.x + circleRadius * Math.cos(rotation * ratio),
-    rightCirclePos.y + circleRadius * Math.sin(rotation * ratio));
+  rightCircleLink.set(rightCirclePos.x + circleBRadiusSlider.value() * Math.cos(rotation * ratio),
+    rightCirclePos.y + circleBRadiusSlider.value() * Math.sin(rotation * ratio));
 }
 
 //given 2 points of a triange and the distances opposide those points,
@@ -66,8 +82,8 @@ function findThirdPoint(pointA, pointB, sideLenA, sideLenB) {
 
   let a2 = sideLenA * sideLenA;
   let b2 = sideLenB * sideLenB;
-  let c2 = sideLenC * sideLenC; 
-  
+  let c2 = sideLenC * sideLenC;
+
   //C = A + b * unit(A, B).rot(+/- alpha)
 
   let alpha = Math.acos((b2 + c2 - a2) / (2 * sideLenB * sideLenC));
@@ -76,6 +92,28 @@ function findThirdPoint(pointA, pointB, sideLenA, sideLenB) {
   return pointC;
 }
 
-function touchMoved() {
+let movingA = false, movingB = false;
+function mousePressed() {
+  let mousePos = createVector(mouseX, mouseY);
+  if (mousePos.dist(topCirclePos) < circleARadiusSlider.value()) {
+    movingA = true;
+  }
+  if (mousePos.dist(rightCirclePos) < circleBRadiusSlider.value()) {
+    movingB = true;
+  }
+}
 
+function mouseReleased() {
+  movingA = false;
+  movingB = false;
+}
+
+function mouseDragged() {
+  let mousePos = createVector(mouseX, mouseY);
+  if (movingA) {
+    topCirclePos = mousePos;
+  }
+  else if (movingB) {
+    rightCirclePos = mousePos;
+  }
 }
